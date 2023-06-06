@@ -1,51 +1,51 @@
 package com.springmvc.crud.dao;
 
 import com.springmvc.crud.models.Student;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class StudentDAO {
 
-    private static int STUDENT_ID = 1;
-    private List<Student> students;
-    {
-        students = new ArrayList<>();
-        students.add(new Student(STUDENT_ID++, "Asulan", 3.8));
-        students.add(new Student(STUDENT_ID++, "Togzhan", 2.4));
-        students.add(new Student(STUDENT_ID++, "Arman", 2.7));
-        students.add(new Student(STUDENT_ID++, "Rinat", 3.8));
+    private final SessionFactory sessionFactory;
+
+    @Autowired
+    public StudentDAO(SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
     }
 
-    /*
-    1. showAll
-    2. showStudent
-    3. editStudent
-    4. deleteStudent
-    5. save
-     */
-
+    @Transactional
     public List<Student> getAll() {
+        Session session = sessionFactory.getCurrentSession();
+        List<Student> students = session.createQuery("select s from Student s", Student.class).getResultList();
+        System.out.println(students);
         return students;
     }
+    @Transactional
     public Student getStudent(int id) {
-        for (Student s : students)
-            if (s.getId() == id)
-                return s;
-        return null;
+        Session session = sessionFactory.getCurrentSession();
+        return session.get(Student.class, id);
     }
+    @Transactional
     public void editStudent(int id, Student updatedStudent) {
-        Student student = getStudent(id);
-        student.setName(updatedStudent.getName());
+        Session session = sessionFactory.getCurrentSession();
+        Student student = session.get(Student.class, id);
         student.setGpa(updatedStudent.getGpa());
+        student.setName(updatedStudent.getName());
     }
+    @Transactional
     public void deleteStudent(int id) {
-        students.removeIf(student -> student.getId() == id);
+        Session session = sessionFactory.getCurrentSession();
+        Student student = session.get(Student.class, id);
+        session.remove(student);
     }
+    @Transactional
     public void save(Student student) {
-        student.setId(STUDENT_ID++);
-        students.add(student);
+        sessionFactory.getCurrentSession().save(student);
     }
 }
